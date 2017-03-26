@@ -1,34 +1,67 @@
 #include <math.h>
+#include <Servo.h>
+
+Servo servoIncline;
+Servo servoBoot;
+const float pi = 3.14;
+const double g = -981;       // Gravity in cm/s^2
 
 void setup()
 {
-int x;                      // Distance Horizontal in cm
-int y;                      // Distance Vertial in cm
-double g = -9.81/100;       // Gravity in cm/s^2
+unsigned int x;                      // Distance Horizontal in cm
+unsigned int y;                      // Distance Vertial in cm
 double vo;                  // Initial Velocity in cm/s
 double theta;               // Angle in radians
+Serial.begin(9600);
+servoIncline.attach(10);
+servoBoot.attach(8);
 
-x = 20;                     // Replace with sensor horizontal distance
-y = 2;                      // Replace with sensor vertical distance
-vo = 10;                    // Replace with initial velocity
+x = 100;                   // Replace with sensor horizontal distance
+y = 0;                     // Replace with sensor vertical distance
+vo = 50;                  // Replace with initial velocity
 
 theta = atan(CalculateAngle(x,g,vo,y));
+Serial.print("\nTheta = ");
+Serial.print(theta);
 
+theta *= 360/(2*pi);
+Serial.print("\nTheta in degrees =");
+Serial.print(theta);
+
+moveServo(servoIncline,45);
+moveServo(servoIncline, 0);
+moveServo(servoIncline, theta);
+delay(1000);
+moveServo(servoBoot, 90);
+moveServo(servoBoot, 135);
+moveServo(servoBoot, 90);
+moveServo(servoBoot, 135);
+moveServo(servoBoot, 90);
+
+moveServo(servoIncline, 0);
+
+Serial.print("\nJob's done");
 
 }
 
-double CalculateAngle(int x, double g, double vo, int y)
+void moveServo(Servo servo, int angle)
 {
-  double a = (g*x*x)/(2*vo);       // First constant
-  double b = x;          // Second constant
-  double c = (g*x*x)/(2*vo)+y;
+  servo.write(angle);
+  Serial.println(angle);
+  delay(1000);
+}
+
+double CalculateAngle(unsigned int x, int g, double vo, unsigned int y)
+{
+  float a = (g*x*x)/(2*vo*vo);    // First constant
+  int b = x;                      // Second constant
+  float c = (g*x*x)/(2*vo*vo)-y;  // Third constant
   double nPlus;
   double nMinus;
   
-  nPlus = (-b + sqrt(b*b+4*a*c))/(2*a);
-  nMinus = (-b - sqrt(b*b+4*a*c))/(2*a);
+  nPlus = ((-b) + sqrt((b*b)-(4*a*c)))/(2*a);
+  nMinus = ((-b) - sqrt((b*b)-(4*a*c)))/(2*a);
 
-  Serial.begin(9600);
   Serial.print("Value of A: ");
   Serial.print(a);
   Serial.print("\nValue of B: ");
@@ -40,6 +73,8 @@ double CalculateAngle(int x, double g, double vo, int y)
   Serial.print(nPlus);
   Serial.print("\nValue of nMinus: ");
   Serial.print(nMinus);
+
+  return nMinus;
 }
 
 void loop()
